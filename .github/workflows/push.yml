@@ -77,6 +77,13 @@ jobs:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
         run: pulumi login
 
+      - name: Cache yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: ./infrastructure/node_modules
+          key: yarn-${{ hashFiles('infrastructure/yarn.lock') }}
+          restore-keys: yarn-
+
       - name: Install infrastructure dependencies
         working-directory: ./infrastructure
         run: yarn install --frozen-lockfile
