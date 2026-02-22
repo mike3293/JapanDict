@@ -63,11 +63,10 @@ const gpt4oDeployment = new azure.cognitiveservices.Deployment('gpt-4o-deploymen
         model: {
             format: 'OpenAI',
             name: 'gpt-4o',
-            version: '2024-08-06',
         },
     },
     sku: {
-        name: 'Standard',
+        name: 'GlobalStandard',
         capacity: 10,
     },
 }, { dependsOn: [openAiAccount] });
