@@ -19,7 +19,6 @@ pact-logs/
 
 # IDE configs
 **/.vs
-**/.vscode/*
 **/obj
 **/*.sln.user
 **/*.csproj.user
