@@ -1,6 +1,7 @@
 using Azure;
 using Azure.AI.OpenAI;
-using JapanDict.Api.Models;
+using JapanDict.Api.Options;
+using Microsoft.Extensions.Options;
 using OpenAI.Chat;
 
 namespace JapanDict.Api.Services;
@@ -23,14 +24,12 @@ public class AzureAiService
         Always include the kanji character itself clearly so it can be indexed.
         """;
 
-    public AzureAiService(IConfiguration config)
+    public AzureAiService(IOptions<AzureOpenAIOptions> options)
     {
-        var endpoint = config["AzureOpenAI:Endpoint"]!;
-        var apiKey = config["AzureOpenAI:ApiKey"]!;
-        var deployment = config["AzureOpenAI:DeploymentName"] ?? "gpt-4o";
+        var cfg = options.Value;
 
-        var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-        _chatClient = client.GetChatClient(deployment);
+        var client = new AzureOpenAIClient(new Uri(cfg.Endpoint), new AzureKeyCredential(cfg.ApiKey));
+        _chatClient = client.GetChatClient(cfg.DeploymentName);
     }
 
     /// <summary>

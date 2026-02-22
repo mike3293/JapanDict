@@ -1,18 +1,23 @@
 using JapanDict.Api.Extensions;
 using JapanDict.Api.Middleware;
 using JapanDict.Api.Models;
+using JapanDict.Api.Options;
 using JapanDict.Api.Services;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── MongoDB / Cosmos DB ────────────────────────────────────────────────────
-var mongoConnectionString = builder.Configuration["CosmosDb:ConnectionString"]
-    ?? throw new InvalidOperationException("CosmosDb:ConnectionString is required.");
-var databaseName = builder.Configuration["CosmosDb:DatabaseName"] ?? "japandict-db";
+// ── Options ───────────────────────────────────────────────────────────────
+builder.Services.Configure<CosmosDbOptions>(builder.Configuration.GetSection(CosmosDbOptions.SectionName));
+builder.Services.Configure<AzureOpenAIOptions>(builder.Configuration.GetSection(AzureOpenAIOptions.SectionName));
+builder.Services.Configure<SeedingOptions>(builder.Configuration.GetSection(SeedingOptions.SectionName));
 
-var mongoClient = new MongoClient(mongoConnectionString);
-var database = mongoClient.GetDatabase(databaseName);
+// ── MongoDB / Cosmos DB ────────────────────────────────────────────────────
+var cosmosDbOptions = builder.Configuration.GetSection(CosmosDbOptions.SectionName).Get<CosmosDbOptions>()
+    ?? throw new InvalidOperationException("CosmosDb configuration is required.");
+
+var mongoClient = new MongoClient(cosmosDbOptions.ConnectionString);
+var database = mongoClient.GetDatabase(cosmosDbOptions.DatabaseName);
 
 builder.Services.AddSingleton(database.GetCollection<AccessKey>("access_keys"));
 builder.Services.AddSingleton(database.GetCollection<ChatSession>("chat_sessions"));
@@ -23,9 +28,6 @@ builder.Services.AddSingleton<AzureAiService>();
 builder.Services.AddSingleton<ChatSessionService>();
 builder.Services.AddSingleton<KanjiIndexService>();
 
-// ── Options ───────────────────────────────────────────────────────────────
-builder.Services.Configure<SeedingOptions>(builder.Configuration.GetSection(SeedingOptions.SectionName));
-
 // ── ASP.NET Core ───────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -33,7 +35,7 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // ── Seed test data ─────────────────────────────────────────────────────────
-await app.Services.SeedDatabaseAsync(app.Logger);
+await app.Services.SeedDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();

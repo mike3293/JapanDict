@@ -1,4 +1,4 @@
-namespace JapanDict.Api.Models;
+namespace JapanDict.Api.Options;
 
 public class SeedingOptions
 {
