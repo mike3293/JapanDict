@@ -73,7 +73,7 @@ const gpt4oDeployment = new azure.cognitiveservices.Deployment('gpt-4o-deploymen
 
 // Retrieve the OpenAI API key at deploy time
 const openAiKeys = pulumi
-    .all([resourceGroup.name, openAiAccount.name])
+    .all([resourceGroup.name, openAiAccount.name, gpt4oDeployment.id])
     .apply(([rg, acc]) =>
         azure.cognitiveservices.listAccountKeys({
             resourceGroupName: rg,
