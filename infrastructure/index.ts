@@ -7,7 +7,7 @@ const dockerUsername = process.env.DOCKER_USERNAME!;
 // ── Resource Group ────────────────────────────────────────────────────────
 const resourceGroup = new azure.resources.ResourceGroup('japandict-rg', {
     resourceGroupName: 'japandict-rg',
-    location: 'northeurope',
+    location: 'polandcentral',
 });
 
 // ── Cosmos DB (MongoDB API, Free Tier) ────────────────────────────────────
