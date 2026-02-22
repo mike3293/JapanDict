@@ -97,6 +97,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           BACKEND_VERSION: ${{ env.BACKEND_VERSION }}
+          SEED_ACCESS_KEY: ${{ secrets.SEED_ACCESS_KEY }}
         run: |
           pulumi stack select prod 2>/dev/null || pulumi stack init prod
           pulumi up --yes --stack prod

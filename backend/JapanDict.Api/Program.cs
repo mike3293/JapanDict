@@ -1,3 +1,4 @@
+using JapanDict.Api.Extensions;
 using JapanDict.Api.Middleware;
 using JapanDict.Api.Models;
 using JapanDict.Api.Services;
@@ -22,11 +23,17 @@ builder.Services.AddSingleton<AzureAiService>();
 builder.Services.AddSingleton<ChatSessionService>();
 builder.Services.AddSingleton<KanjiIndexService>();
 
+// ── Options ───────────────────────────────────────────────────────────────
+builder.Services.Configure<SeedingOptions>(builder.Configuration.GetSection(SeedingOptions.SectionName));
+
 // ── ASP.NET Core ───────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// ── Seed test data ─────────────────────────────────────────────────────────
+await app.Services.SeedDatabaseAsync(app.Logger);
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
