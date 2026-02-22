@@ -1,0 +1,98 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ── Build & push backend Docker image ─────────────────────────────────────
+  build-backend:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.BACKEND_VERSION }}
+      changed: ${{ steps.changed.outputs.BACKEND_CHANGED }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect backend changes
+        id: changed
+        run: |
+          if [ $(git rev-list --count HEAD) -lt 2 ]; then
+            echo "BACKEND_CHANGED=true" >> $GITHUB_OUTPUT
+          elif git diff --name-only HEAD^ HEAD | grep -q '^backend/'; then
+            echo "BACKEND_CHANGED=true" >> $GITHUB_OUTPUT
+          else
+            echo "BACKEND_CHANGED=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get git version
+        id: get-version
+        if: steps.changed.outputs.BACKEND_CHANGED == 'true'
+        run: |
+          VERSION=$(git rev-parse --short HEAD)
+          echo "BACKEND_VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Log in to Docker Hub
+        if: steps.changed.outputs.BACKEND_CHANGED == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        if: steps.changed.outputs.BACKEND_CHANGED == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend image
+        if: steps.changed.outputs.BACKEND_CHANGED == 'true'
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKER_USERNAME }}/japandict-api:${{ steps.get-version.outputs.BACKEND_VERSION }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/japandict-api:latest \
+            ./backend/JapanDict.Api
+          docker push ${{ secrets.DOCKER_USERNAME }}/japandict-api:${{ steps.get-version.outputs.BACKEND_VERSION }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/japandict-api:latest
+
+  # ── Pulumi deploy ──────────────────────────────────────────────────────────
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-backend]
+    env:
+      BACKEND_VERSION: ${{ needs.build-backend.outputs.version || 'latest' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Pulumi CLI
+        run: |
+          curl -fsSL https://get.pulumi.com | sh
+          echo "$HOME/.pulumi/bin" >> $GITHUB_PATH
+
+      - name: Pulumi login
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: pulumi login
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install infrastructure dependencies
+        working-directory: ./infrastructure
+        run: yarn install --frozen-lockfile
+
+      - name: Pulumi up
+        working-directory: ./infrastructure
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          BACKEND_VERSION: ${{ env.BACKEND_VERSION }}
+        run: pulumi up --yes --stack prod

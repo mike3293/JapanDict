@@ -1,0 +1,54 @@
+# Build outputs
+**/bin
+**/dist
+**/publish_output
+utils/images
+
+# Test outputs
+**/pact-logs
+**/coverage
+**/junit.xml
+pact-logs/
+
+# Dependancies
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/node_modules
+**/debug.log
+
+# IDE configs
+**/.vs
+**/.vscode/*
+**/obj
+**/*.sln.user
+**/*.csproj.user
+**/*.ncrunchsolution.user
+**/.idea/
+**/.idea/
+.vscode/
+**/*.sln.DotSettings.user
+
+# OS
+**/.DS_Store
+
+# Other
+**/*.cache
+*.orig
+
+# Includes
+!**/.vscode/settings.json
+!**/.vscode/launch.json
+
+# Project Rider
+**/.editorconfig
+
+# local appsettings
+appsettings-local.jsonc
+appsettings.LocalSecrets.json
+
+**/old
+
+# Certificates
+**/old
+**/Cert
