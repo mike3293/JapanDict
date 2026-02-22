@@ -118,6 +118,10 @@ const apiApp = new azure.web.WebApp('japandict-api', {
                 value: 'japandict-db',
             },
             {
+                name: 'Seeding__InitialAccessKey',
+                value: process.env.SEED_ACCESS_KEY!,
+            },
+            {
                 name: 'AzureOpenAI__Endpoint',
                 value: openAiEndpoint,
             },

@@ -104,38 +104,10 @@ JapanDict is built around a simple workflow:
 JapanDict/
 ├── backend/
 │   └── JapanDict.Api/           # .NET Web API
-│       ├── Controllers/
-│       │   ├── ChatController.cs
-│       │   └── KanjiController.cs
-│       ├── Middleware/
-│       │   └── ApiKeyMiddleware.cs
-│       ├── Models/
-│       │   ├── AccessKey.cs
-│       │   ├── ChatSession.cs
-│       │   └── KanjiEntry.cs
-│       ├── Services/
-│       │   ├── AzureAiService.cs
-│       │   ├── ChatSessionService.cs
-│       │   └── KanjiIndexService.cs
-│       ├── appsettings.json
-│       └── Dockerfile
+│       ├── ...
 ├── mobile/
 │   └── JapanDictApp/            # React Native (Expo or bare)
-│       ├── src/
-│       │   ├── screens/
-│       │   │   ├── ChatScreen.tsx
-│       │   │   ├── KanjiEncyclopedia.tsx
-│       │   │   └── SessionHistory.tsx
-│       │   ├── components/
-│       │   │   ├── ChatBubble.tsx
-│       │   │   ├── StreamingMessage.tsx
-│       │   │   └── KanjiCard.tsx
-│       │   ├── services/
-│       │   │   └── api.ts
-│       │   └── hooks/
-│       │       ├── useShareIntent.ts
-│       │       └── useChatStream.ts
-│       └── package.json
+│       ├── ...
 ├── infrastructure/
 │   ├── index.ts                 # Pulumi program (TypeScript)
 │   ├── package.json
@@ -300,7 +272,6 @@ The pipeline (`.github/workflows/push.yml`) triggers on every push to `main` and
 | `DOCKER_USERNAME` | Secret | Docker Hub username |
 | `DOCKER_PASSWORD` | Secret | Docker Hub password / token |
 | `PULUMI_ACCESS_TOKEN` | Secret | Pulumi Cloud token |
-| `AZURE_CREDENTIALS` | Secret | Azure service principal JSON |
 | `AZURE_CLIENT_ID` | Secret | Service principal client ID |
 | `AZURE_CLIENT_SECRET` | Secret | Service principal client secret |
 | `AZURE_TENANT_ID` | Secret | Azure tenant ID |
@@ -318,7 +289,6 @@ The pipeline (`.github/workflows/push.yml`) triggers on every push to `main` and
 - [Node.js 20+](https://nodejs.org/) + Yarn
 - [Docker](https://www.docker.com/)
 - [Pulumi CLI](https://www.pulumi.com/docs/install/)
-- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Expo CLI](https://docs.expo.dev/get-started/installation/) (for mobile)
 
 ### Local Backend
@@ -375,10 +345,9 @@ npx expo start
 - [x] .NET backend scaffold (API key auth, multi-turn chat sessions, streaming SSE, kanji extraction)
 - [x] Pulumi infrastructure (Cosmos DB, Azure OpenAI, App Service)
 - [x] GitHub Actions CI/CD (backend Docker build + Pulumi deploy)
-- [ ] React Native app — AI agent chat screen (multi-turn, streaming)
-- [ ] React Native app — Kanji Encyclopedia tab
-- [ ] React Native app — Session History screen
-- [ ] Share intent integration (Android + iOS)
+- [x] React Native app — AI agent chat screen (multi-turn, streaming)
+- [x] React Native app — Kanji Encyclopedia tab
+- [x] React Native app — Session History screen
+- [x] Share intent integration (Android + iOS)
 - [ ] Offline kanji cache on device
-- [ ] Push notifications for daily review
 - [ ] CI/CD for mobile app (EAS Build)
