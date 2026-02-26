@@ -25,8 +25,7 @@ export interface ChatSession {
 export interface KanjiEntry {
   id: string;
   character: string;
-  readings: string[];
-  meanings: string[];
+  meaning: string;
   jlptLevel?: string;
   occurrenceCount: number;
   firstSeenAt: string;

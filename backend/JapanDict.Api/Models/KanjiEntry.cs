@@ -14,9 +14,7 @@ public class KanjiEntry
     /// <summary>Single CJK character, e.g. "東".</summary>
     public string Character { get; set; } = string.Empty;
 
-    public List<string> Readings { get; set; } = [];
-
-    public List<string> Meanings { get; set; } = [];
+    public string Meaning { get; set; } = string.Empty;
 
     /// <summary>JLPT level N1–N5, or null if unknown.</summary>
     public string? JlptLevel { get; set; }

@@ -58,13 +58,10 @@ function KanjiCard({
       <Text style={[card.character, { color: colors.text }]}>{entry.character}</Text>
       <View style={card.info}>
         <View style={card.infoTop}>
-          <Text style={[card.readings, { color: colors.tint }]} numberOfLines={1}>
-            {entry.readings.join('  ·  ')}
-          </Text>
-          <JlptBadge level={entry.jlptLevel} />
+              <JlptBadge level={entry.jlptLevel} />
         </View>
         <Text style={[card.meanings, { color: colors.text }]} numberOfLines={2}>
-          {entry.meanings.join(', ')}
+          {entry.meaning}
         </Text>
         <Text style={[card.count, { color: colors.icon }]}>
           Seen {entry.occurrenceCount}×
@@ -89,7 +86,6 @@ const card = StyleSheet.create({
   character: { fontSize: 38, fontWeight: '700', width: 48, textAlign: 'center', alignSelf: 'center' },
   info: { flex: 1, gap: 3 },
   infoTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  readings: { fontSize: 14, fontWeight: '500', flex: 1 },
   meanings: { fontSize: 13, lineHeight: 18 },
   count: { fontSize: 11 },
 });
@@ -134,8 +130,8 @@ export default function KanjiScreen() {
         result = result.filter(
           (k) =>
             k.character.includes(q) ||
-            k.readings.some((r) => r.includes(q)) ||
-            k.meanings.some((m) => m.toLowerCase().includes(lq)),
+            // readings removed
+            k.meaning.toLowerCase().includes(lq),
         );
       }
       setFiltered(result);
@@ -185,7 +181,7 @@ export default function KanjiScreen() {
             style={[styles.searchInput, { color: colors.text }]}
             value={query}
             onChangeText={handleSearch}
-            placeholder="Search character, reading, meaning..."
+            placeholder="Search character or meaning..."
             placeholderTextColor={colors.icon}
             autoCapitalize="none"
             autoCorrect={false}

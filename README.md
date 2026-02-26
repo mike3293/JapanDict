@@ -27,7 +27,7 @@ JapanDict is built around a simple workflow:
 
 1. You encounter Japanese text anywhere on your phone.
 2. You share it to JapanDict (or paste it manually into the chat).
-3. The app sends it to a .NET backend, which queries an Azure AI model for a full kanji/vocabulary breakdown, readings, meanings, and example sentences.
+3. The app sends it to a .NET backend, which queries an Azure AI model for a full kanji/vocabulary breakdown, meanings, and example sentences.
 4. The result is displayed as a chat message and saved to your personal history.
 5. A built-in dictionary tab lets you search everything you have ever looked up, powered by your Cosmos DB history.
 
@@ -66,7 +66,7 @@ JapanDict is built around a simple workflow:
 │  │  Collections:                                        │   │
 │  │   • access_keys   { key, isActive, label }           │   │
 │  │   • chat_sessions { keyId, messages[] }              │   │
-│  │   • kanji_index   { keyId, character, readings }     │   │
+│  │   • kanji_index   { keyId, character, meaning }      │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                            │
@@ -87,7 +87,7 @@ JapanDict is built around a simple workflow:
 ### Mobile App
 - **AI Agent Chat** — a standard multi-turn chat UI (think ChatGPT): conversation bubbles, streaming responses, and persistent session history. The AI acts as a Japanese language tutor — you send any text and it explains kanji, grammar, readings, and usage in context.
 - **Share Intent** — share text from any app (browser, e-reader, messaging) directly into JapanDict. The shared text is dropped into the chat input and auto-submitted, just like typing it yourself.
-- **Kanji Encyclopedia tab** — a secondary screen that aggregates every unique kanji encountered across all your chat sessions. Each entry shows character, on/kun readings, meanings, JLPT level (if known), and a count of how many times it appeared in your searches. Tap any entry to open a new chat pre-loaded with that kanji for deeper exploration.
+- **Kanji Encyclopedia tab** — a secondary screen that aggregates every unique kanji encountered across all your chat sessions. Each entry shows character, meaning, JLPT level (if known), and a count of how many times it appeared in your searches. Tap any entry to open a new chat pre-loaded with that kanji for deeper exploration.
 - **Session History** — previous chat sessions are listed chronologically so you can resume or review any past conversation.
 
 ### Backend
@@ -132,7 +132,7 @@ JapanDict/
 | `GET` | `/api/chat/sessions` | List all sessions for the current key |
 | `GET` | `/api/chat/sessions/{id}` | Get full message thread for a session |
 | `GET` | `/api/kanji` | List all kanji encountered by the current key |
-| `GET` | `/api/kanji/search?q=` | Search kanji by character, reading, or meaning |
+| `GET` | `/api/kanji/search?q=` | Search kanji by character or meaning |
 
 ### Auth Flow
 
@@ -176,8 +176,7 @@ Access keys are **created manually** by the administrator directly in Cosmos DB 
   "_id": "...",
   "keyId": "key_abc123",
   "character": "東",
-  "readings": ["ひがし", "とう"],
-  "meanings": ["east"],
+  "meaning": "east",
   "jlptLevel": "N5",
   "occurrenceCount": 7,
   "firstSeenAt": "2026-02-22T10:00:00Z"
@@ -204,7 +203,7 @@ The primary screen is a full AI agent chat interface:
 A dedicated tab aggregates every unique kanji the AI has mentioned or explained across all chat sessions for the current access key:
 
 - Populated automatically by the backend whenever an AI response is saved — a lightweight extraction pass identifies CJK characters and upserts them into the `kanji_index` collection.
-- Displays: character, primary reading(s), meaning(s), JLPT level, first-seen date, and occurrence count.
+- Displays: character, meaning, JLPT level, first-seen date, and occurrence count.
 - Tapping a kanji opens the chat screen pre-filled with a prompt like _「東」について教えてください_ for instant deeper exploration.
 - Supports full-text search and filter by JLPT level (N5–N1 + unknown).
 

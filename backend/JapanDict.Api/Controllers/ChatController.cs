@@ -88,7 +88,7 @@ public class ChatController(
         // Persist assistant reply and index kanji (fire-and-forget after response)
         var assistantMessage = new ChatMessage { Role = "assistant", Content = fullResponse };
         await chatService.AppendMessageAsync(id, assistantMessage);
-        await kanjiService.IndexFromTextAsync(KeyId, request.Content, fullResponse);
+        await kanjiService.IndexFromTextAsync(KeyId, fullResponse);
     }
 }
 

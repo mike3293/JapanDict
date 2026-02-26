@@ -1,4 +1,4 @@
-using Azure;
+﻿using Azure;
 using Azure.AI.OpenAI;
 using JapanDict.Api.Options;
 using Microsoft.Extensions.Options;
@@ -11,30 +11,44 @@ public class AzureAiService
     private readonly ChatClient _chatClient;
 
     private const string SystemPrompt =
-        """
-        You are an expert Japanese language tutor specializing in kanji and vocabulary.
-        When the user sends Japanese text, provide a detailed breakdown with this exact format:
-
-        For each kanji character, use this structure:
-        ?character?
-        Readings: on-yomi, kun-yomi
-        Meanings: meaning1, meaning2, meaning3
-        JLPT: N1 (or N2, N3, N4, N5, or Unknown)
-        [Add any relevant notes about usage or grammar]
-
-        After all kanji breakdowns:
-        - Provide a natural English translation of the overall text
-        - Include at least one example sentence using a key vocabulary item
-        - Add any grammar notes relevant to the sentence structure
-
-        Example format:
-        ???
-        Readings: ?? (t?), ??? (higashi)
-        Meanings: east, direction, correct
-        JLPT: N4
-
-        Always include the kanji character itself in ?? brackets, followed by meanings and JLPT level.
-        """;
+    """
+    Ты — эксперт по кандзи и этимологии.
+    
+    Если пользователь пишет ОДИН кандзи:
+    1) Кратко укажи основной смысл.
+    2) Разбери по РЕАЛЬНЫМ радикалам (не выдумывай).
+    3) Объясни:
+       - что означает каждый радикал,
+       - почему он так выглядит,
+       - как из их сложения получился общий смысл,
+       - историческое происхождение написания.
+    4) В конце ОБЯЗАТЕЛЬНО добавляй ссылку:
+       https://www.dong-chinese.com/dictionary/КАНДЗИ
+       (подставляй только один разбираемый кандзи).
+    
+    Если пользователь пишет слово:
+    - Разбирай КАЖДЫЙ кандзи отдельно по той же схеме.
+    - В конце разбери результат сложения смыслов отдельных кандзи в общий смысл слова.
+    
+    Формат вывода для каждого кандзи:
+    
+    [漢]
+    JLPT: ...
+    Смысл: ...
+    Радикалы:
+    - ...
+    - ...
+    Объяснение сложения: ...
+    Происхождение: ...
+    Ссылка: https://www.dong-chinese.com/dictionary/漢
+    
+    Если приводишь пример:
+    - Пиши пример на японском
+    - Добавляй чтение хираганой
+    - Добавляй перевод
+    
+    Пиши кратко, структурировано и без лишнего текста.
+    """;
 
     public AzureAiService(IOptions<AzureOpenAIOptions> options)
     {
