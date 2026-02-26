@@ -54,6 +54,9 @@ public static class DatabaseExtensions
 
                     // Indexes to speed up search queries
                     new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.Character)),
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.Readings)),
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.Meanings)),
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.JlptLevel))
                 };
 
                 await kanjiCollection.Indexes.CreateManyAsync(indexes);

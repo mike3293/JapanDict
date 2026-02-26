@@ -54,7 +54,10 @@ public partial class KanjiIndexService(IMongoCollection<KanjiEntry> kanjiCollect
         var filter = Builders<KanjiEntry>.Filter.And(
             Builders<KanjiEntry>.Filter.Eq(k => k.KeyId, keyId),
             Builders<KanjiEntry>.Filter.Or(
-                Builders<KanjiEntry>.Filter.Eq(k => k.Character, query)));
+                Builders<KanjiEntry>.Filter.Eq(k => k.Character, query),
+                Builders<KanjiEntry>.Filter.AnyEq(k => k.Readings, query),
+                Builders<KanjiEntry>.Filter.AnyEq(k => k.Meanings, query),
+                Builders<KanjiEntry>.Filter.Eq(k => k.JlptLevel, query.ToUpperInvariant())));
 
         return await kanjiCollection.Find(filter).ToListAsync();
     }
