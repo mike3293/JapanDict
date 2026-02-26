@@ -77,9 +77,9 @@ export default function HistoryScreen() {
     setError(null);
     try {
       const data = await apiClient.getSessions();
-      // Sort newest first
-      setSessions(data.sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()));
-    } catch {
+      setSessions(data);
+    } catch (err) {
+      console.error('Failed to load sessions:', err);
       setError('Failed to load sessions. Check your settings.');
     } finally {
       setIsLoading(false);

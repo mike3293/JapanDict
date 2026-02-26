@@ -60,6 +60,22 @@ public static class DatabaseExtensions
                 };
 
                 await kanjiCollection.Indexes.CreateManyAsync(indexes);
+
+                var chatCollection = services.GetRequiredService<IMongoCollection<ChatSession>>();
+                var chatIndexes = new List<CreateIndexModel<ChatSession>>
+                {
+                    new(
+                        Builders<ChatSession>.IndexKeys
+                            .Ascending(s => s.KeyId)
+                            .Descending(s => s.UpdatedAt)),
+
+                    new(
+                        Builders<ChatSession>.IndexKeys
+                            .Ascending(s => s.KeyId)
+                            .Ascending(s => s.Id))
+                };
+
+                await chatCollection.Indexes.CreateManyAsync(chatIndexes);
             }
         }
     }

@@ -7,7 +7,8 @@ public class ChatSessionService(IMongoCollection<ChatSession> sessions)
 {
     public async Task<List<ChatSessionSummary>> GetSessionsAsync(string keyId) =>
         await sessions
-            .Find(s => s.KeyId == keyId)
+            .Aggregate()
+            .Match(s => s.KeyId == keyId)
             .SortByDescending(s => s.UpdatedAt)
             .Project(s => new ChatSessionSummary(
                 s.Id,
