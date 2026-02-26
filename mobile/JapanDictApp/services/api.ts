@@ -7,9 +7,15 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface ChatSessionInfo {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ChatSession {
   id: string;
-  keyId: string;
   title: string;
   createdAt: string;
   updatedAt: string;
@@ -18,7 +24,6 @@ export interface ChatSession {
 
 export interface KanjiEntry {
   id: string;
-  keyId: string;
   character: string;
   readings: string[];
   meanings: string[];
@@ -59,8 +64,8 @@ export class ApiClient {
   }
 
 
-  async getSessions(): Promise<ChatSession[]> {
-    return this.request<ChatSession[]>('/api/chat/sessions');
+  async getSessions(): Promise<ChatSessionInfo[]> {
+    return this.request<ChatSessionInfo[]>('/api/chat/sessions');
   }
 
   async createSession(): Promise<ChatSession> {

@@ -13,7 +13,7 @@ import {
 
 import { Colors } from '@/constants/theme';
 import { useSettingsContext } from '@/contexts/settings-context';
-import type { ChatSession } from '@/services/api';
+import type { ChatSessionInfo } from '@/services/api';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -30,11 +30,10 @@ function SessionRow({
   colors,
   onPress,
 }: {
-  session: ChatSession;
+  session: ChatSessionInfo;
   colors: typeof Colors.light;
   onPress: () => void;
 }) {
-  const lastMsg = session.messages[session.messages.length - 1];
   return (
     <TouchableOpacity
       style={[styles.row, { borderBottomColor: colors.icon + '20' }]}
@@ -44,17 +43,8 @@ function SessionRow({
         <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>
           {session.title || 'Untitled conversation'}
         </Text>
-        {lastMsg && (
-          <Text style={[styles.rowPreview, { color: colors.icon }]} numberOfLines={2}>
-            {lastMsg.role === 'assistant' ? lastMsg.content : `You: ${lastMsg.content}`}
-          </Text>
-        )}
         <Text style={[styles.rowMeta, { color: colors.icon }]}>
           {formatDate(session.updatedAt ?? session.createdAt)}
-          {'  ·  '}
-          {formatTime(session.updatedAt ?? session.createdAt)}
-          {'  ·  '}
-          {session.messages.length} message{session.messages.length !== 1 ? 's' : ''}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={colors.icon} />
@@ -67,7 +57,7 @@ export default function HistoryScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const { apiClient } = useSettingsContext();
 
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [sessions, setSessions] = useState<ChatSessionInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,7 +78,7 @@ export default function HistoryScreen() {
 
   useFocusEffect(useCallback(() => { loadSessions(); }, [loadSessions]));
 
-  const handleTap = (session: ChatSession) => {
+  const handleTap = (session: ChatSessionInfo) => {
     router.navigate({ pathname: '/(tabs)', params: { sessionId: session.id } });
   };
 

@@ -171,7 +171,7 @@ export default function KanjiScreen() {
   const handleTapKanji = (entry: KanjiEntry) => {
     router.navigate({
       pathname: '/(tabs)',
-      params: { prompt: `「${entry.character}」について教えてください` },
+      params: { prompt: entry.character },
     });
   };
 
