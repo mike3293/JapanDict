@@ -20,6 +20,13 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "PROCESS_TEXT",
+          "category": ["DEFAULT"],
+          "data": [{ "mimeType": "text/*" }]
+        }
+      ],
       "package": "com.japandict"
     },
     "web": {

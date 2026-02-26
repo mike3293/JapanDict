@@ -18,6 +18,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Alert,
   useColorScheme,
   View,
 } from 'react-native';
@@ -70,6 +71,18 @@ export default function ChatScreen() {
   const params = useLocalSearchParams<{ sessionId?: string; prompt?: string }>();
   const { apiClient, isLoaded } = useSettingsContext();
   const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
+
+  // Show a simple alert when the app receives a PROCESS_TEXT intent
+  useEffect(() => {
+    if (!hasShareIntent || !shareIntent?.text) return;
+    const action = shareIntent.action ?? '';
+    const isProcessText = action.includes('PROCESS_TEXT') || action === 'android.intent.action.PROCESS_TEXT';
+    if (isProcessText) {
+      Alert.alert('Shared text', shareIntent.text, [
+        { text: 'OK', onPress: () => resetShareIntent() },
+      ]);
+    }
+  }, [hasShareIntent, shareIntent]);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState('');
