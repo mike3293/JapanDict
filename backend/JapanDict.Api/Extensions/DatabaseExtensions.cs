@@ -1,7 +1,9 @@
 using JapanDict.Api.Models;
 using JapanDict.Api.Options;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using JapanDict.Api.Services;
 
 namespace JapanDict.Api.Extensions;
 
@@ -11,6 +13,8 @@ public static class DatabaseExtensions
     {
         public async Task SeedDatabaseAsync()
         {
+            await EnsureIndexesAsync();
+
             var accessKeysCollection = services.GetRequiredService<IMongoCollection<AccessKey>>();
             var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseSeeding");
 
@@ -28,6 +32,34 @@ public static class DatabaseExtensions
 
                 await accessKeysCollection.InsertOneAsync(testKey);
                 logger.LogInformation("Seeded test access key: {KeyId}", testKey.Id);
+            }
+
+            async Task EnsureIndexesAsync()
+            {
+                var kanjiCollection = services.GetRequiredService<IMongoCollection<KanjiEntry>>();
+                var indexes = new List<CreateIndexModel<KanjiEntry>>
+                {
+                    // Supports: Find(k => k.KeyId == keyId).SortByDescending(k => k.OccurrenceCount)
+                    new(
+                        Builders<KanjiEntry>.IndexKeys
+                            .Ascending(k => k.KeyId)
+                            .Descending(k => k.OccurrenceCount)),
+
+                    // Unique index to support the upsert filter (KeyId + Character)
+                    new(
+                        Builders<KanjiEntry>.IndexKeys
+                            .Ascending(k => k.KeyId)
+                            .Ascending(k => k.Character),
+                        new CreateIndexOptions { Unique = true }),
+
+                    // Indexes to speed up search queries
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.Character)),
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.Readings)),
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.Meanings)),
+                    new(Builders<KanjiEntry>.IndexKeys.Ascending(k => k.JlptLevel))
+                };
+
+                await kanjiCollection.Indexes.CreateManyAsync(indexes);
             }
         }
     }
