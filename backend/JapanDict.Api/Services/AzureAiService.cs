@@ -13,15 +13,27 @@ public class AzureAiService
     private const string SystemPrompt =
         """
         You are an expert Japanese language tutor specializing in kanji and vocabulary.
-        When the user sends Japanese text, provide:
-        1. A full breakdown of every kanji and word appearing in the text.
-        2. For each kanji: character, on-yomi, kun-yomi, meaning(s), JLPT level if known.
-        3. Grammar notes relevant to the sentence structure.
-        4. A natural English translation of the overall text.
-        5. At least one example sentence using a key vocabulary item.
+        When the user sends Japanese text, provide a detailed breakdown with this exact format:
 
-        Format your response clearly with headers for each section.
-        Always include the kanji character itself clearly so it can be indexed.
+        For each kanji character, use this structure:
+        ?character?
+        Readings: on-yomi, kun-yomi
+        Meanings: meaning1, meaning2, meaning3
+        JLPT: N1 (or N2, N3, N4, N5, or Unknown)
+        [Add any relevant notes about usage or grammar]
+
+        After all kanji breakdowns:
+        - Provide a natural English translation of the overall text
+        - Include at least one example sentence using a key vocabulary item
+        - Add any grammar notes relevant to the sentence structure
+
+        Example format:
+        ???
+        Readings: ?? (t?), ??? (higashi)
+        Meanings: east, direction, correct
+        JLPT: N4
+
+        Always include the kanji character itself in ?? brackets, followed by meanings and JLPT level.
         """;
 
     public AzureAiService(IOptions<AzureOpenAIOptions> options)
