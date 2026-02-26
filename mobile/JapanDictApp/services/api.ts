@@ -1,4 +1,5 @@
-// ─── Data types matching the .NET backend models ──────────────────────────────
+import { Platform } from 'react-native';
+import SSE from 'react-native-sse';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -26,8 +27,6 @@ export interface KanjiEntry {
   firstSeenAt: string;
   lastSeenAt: string;
 }
-
-// ─── API Client ───────────────────────────────────────────────────────────────
 
 export class ApiClient {
   private baseUrl: string;
@@ -59,7 +58,6 @@ export class ApiClient {
     return response.json() as Promise<T>;
   }
 
-  // ── Chat Sessions ──────────────────────────────────────────────────────────
 
   async getSessions(): Promise<ChatSession[]> {
     return this.request<ChatSession[]>('/api/chat/sessions');
@@ -85,6 +83,54 @@ export class ApiClient {
     onError: (err: Error) => void,
     signal?: AbortSignal,
   ): Promise<void> {
+    // React Native's fetch does not expose a readable stream, so we use
+    // an SSE client on mobile. On web we can fall back to the original
+    // streaming implementation for better performance.
+    if (Platform.OS !== 'web') {
+      // use react-native-sse
+      return new Promise<void>((resolve, reject) => {
+        const es = new SSE(
+          `${this.baseUrl}/api/chat/sessions/${sessionId}/messages`,
+          {
+            method: 'POST',
+            headers: this.headers,
+            body: JSON.stringify({ content }),
+          },
+        );
+
+        es.addEventListener('message', (e) => {
+          if (e.data === '[DONE]') {
+            onDone();
+            es.close();
+            resolve();
+            return;
+          }
+          try {
+            const { token } = e.data && JSON.parse(e.data);
+            if (token) onToken(token);
+          } catch {
+            // ignore
+          }
+        });
+
+        es.addEventListener('error', (e: any) => {
+          const err = new Error(String(e));
+          onError(err);
+          es.close();
+          reject(err);
+        });
+
+        // abort handling
+        signal?.addEventListener('abort', () => {
+          es.close();
+          const err = new Error('aborted');
+          onError(err);
+          reject(err);
+        });
+      });
+    }
+
+    // web / other environments with streaming support
     let response: Response;
     try {
       response = await fetch(`${this.baseUrl}/api/chat/sessions/${sessionId}/messages`, {
@@ -150,8 +196,6 @@ export class ApiClient {
       onDone();
     }
   }
-
-  // ── Kanji ──────────────────────────────────────────────────────────────────
 
   async getKanji(): Promise<KanjiEntry[]> {
     return this.request<KanjiEntry[]>('/api/kanji');
