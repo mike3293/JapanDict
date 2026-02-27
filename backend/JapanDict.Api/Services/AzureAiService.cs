@@ -41,7 +41,7 @@ public class AzureAiService
 
     Объяснение сложения: ...
     Происхождение: ...
-    Ссылка: [разбор](https://www.dong-chinese.com/dictionary/漢)
+    [dong chinese](https://www.dong-chinese.com/dictionary/漢)
     
     Если приводишь пример:
     - Пиши пример на японском
