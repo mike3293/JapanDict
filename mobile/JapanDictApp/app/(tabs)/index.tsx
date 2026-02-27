@@ -144,7 +144,7 @@ export default function ChatScreen() {
     if (!isLoaded) return;
     if (!apiClient) return;
     initSession(params.sessionId ?? null);
-  }, [isLoaded, apiClient]);
+  }, [isLoaded, apiClient, params.sessionId]);
 
   // ── Inject prompt param (from kanji tab) ──────────────────────────────────
   useEffect(() => {
