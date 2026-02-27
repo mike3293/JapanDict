@@ -36,6 +36,26 @@ interface Message extends ChatMessage {
   isStreaming?: boolean;
 }
 
+function TypingIndicator({ isUser, colors }: { isUser: boolean; colors: typeof Colors.light }) {
+  const [dots, setDots] = useState(1);
+
+  useEffect(() => {
+    if (!isUser) {
+      const interval = setInterval(() => {
+        setDots((prev) => (prev === 3 ? 1 : prev + 1));
+      }, 400);
+      return () => clearInterval(interval);
+    }
+  }, [isUser]);
+
+  return (
+    <Text style={{ color: isUser ? 'rgba(255,255,255,0.7)' : colors.icon }}>
+      {' '}
+      {'●'.repeat(dots)}
+    </Text>
+  );
+}
+
 function ChatBubble({ message, colors }: { message: Message; colors: typeof Colors.light }) {
   const isUser = message.role === 'user';
   return (
@@ -54,9 +74,7 @@ function ChatBubble({ message, colors }: { message: Message; colors: typeof Colo
         ]}>
         <Text style={[styles.bubbleText, { color: isUser ? '#fff' : colors.text }]}>
           {message.content}
-          {message.isStreaming && (
-            <Text style={{ color: isUser ? 'rgba(255,255,255,0.7)' : colors.icon }}> ▌</Text>
-          )}
+          {message.isStreaming && <TypingIndicator isUser={isUser} colors={colors} />}
         </Text>
       </View>
     </View>
@@ -283,8 +301,8 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+      behavior='height'
+      keyboardVerticalOffset={80}>
       {isLoadingSession && messages.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.tint} />
