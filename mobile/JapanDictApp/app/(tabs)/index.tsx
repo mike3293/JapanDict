@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -22,6 +21,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShareIntentContext } from 'expo-share-intent';
 
@@ -58,13 +58,9 @@ function TypingIndicator({ isUser, colors }: { isUser: boolean; colors: typeof C
 
 function ChatBubble({ message, colors }: { message: Message; colors: typeof Colors.light }) {
   const isUser = message.role === 'user';
+
   return (
     <View style={[styles.bubbleRow, isUser ? styles.bubbleRowUser : styles.bubbleRowAssistant]}>
-      {!isUser && (
-        <View style={[styles.avatar, { backgroundColor: colors.tint }]}>
-          <Text style={styles.avatarText}>AI</Text>
-        </View>
-      )}
       <View
         style={[
           styles.bubble,
@@ -72,10 +68,22 @@ function ChatBubble({ message, colors }: { message: Message; colors: typeof Colo
             ? [styles.bubbleUser, { backgroundColor: colors.tint }]
             : [styles.bubbleAssistant, { backgroundColor: colors.icon + '22' }],
         ]}>
-        <Text style={[styles.bubbleText, { color: isUser ? '#fff' : colors.text }]}>
-          {message.content}
-          {message.isStreaming && <TypingIndicator isUser={isUser} colors={colors} />}
-        </Text>
+        {!message.isStreaming ? (
+          <Markdown
+            style={{
+              heading1: { fontSize: 24 },
+              heading2: { fontSize: 18 },
+              link: { color: colors.tint },
+            }}
+          >
+            {message.content}
+          </Markdown>
+        ) : (
+          <Text>
+            {message.content}
+            <TypingIndicator isUser={isUser} colors={colors} />
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -260,7 +268,7 @@ export default function ChatScreen() {
           if (isFirst) {
             apiClient.getSession(sessionId).then((s) => {
               if (s?.title) setSessionTitle(s.title);
-            }).catch(() => {});
+            }).catch(() => { });
           }
         },
         (err) => {
@@ -383,12 +391,9 @@ const styles = StyleSheet.create({
   bubbleRow: { flexDirection: 'row', marginVertical: 4, alignItems: 'flex-end', gap: 8 },
   bubbleRowUser: { justifyContent: 'flex-end' },
   bubbleRowAssistant: { justifyContent: 'flex-start' },
-  avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontWeight: '700', fontSize: 11 },
-  bubble: { maxWidth: '80%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
+  bubble: { maxWidth: '80%', borderRadius: 18, paddingHorizontal: 14 },
   bubbleUser: { borderBottomRightRadius: 4 },
   bubbleAssistant: { borderBottomLeftRadius: 4 },
-  bubbleText: { fontSize: 15, lineHeight: 22 },
   errorBanner: {
     marginHorizontal: 12,
     marginBottom: 4,
@@ -422,4 +427,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 1,
   },
+  codeInline: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontFamily: 'Courier New',
+    fontSize: 13,
+  },
+  codeBlock: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 6,
+    fontFamily: 'Courier New',
+    fontSize: 13,
+    marginVertical: 8,
+  },
+  heading: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginVertical: 8,
+  },
+  link: {
+    textDecorationLine: 'underline',
+  },
+  userBubble: { borderBottomRightRadius: 4 },
+  assistantBubble: { borderBottomLeftRadius: 4 },
 });
