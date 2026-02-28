@@ -6,7 +6,7 @@ import { ApiClient } from '@/services/api';
 const KEY_API_KEY = 'japandict_api_key';
 const KEY_BACKEND_URL = 'japandict_backend_url';
 
-export const DEFAULT_BACKEND_URL = 'https://japandict-api.azurewebsites.net';
+export const DEFAULT_BACKEND_URL = 'https://japandict-apifb589c4a.azurewebsites.net/';
 
 interface SettingsContextValue {
   apiKey: string;
