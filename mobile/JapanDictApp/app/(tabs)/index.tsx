@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
@@ -36,20 +37,18 @@ interface Message extends ChatMessage {
   isStreaming?: boolean;
 }
 
-function TypingIndicator({ isUser, colors }: { isUser: boolean; colors: typeof Colors.light }) {
+function TypingIndicator({ colors }: { isUser: boolean; colors: typeof Colors.light }) {
   const [dots, setDots] = useState(1);
 
   useEffect(() => {
-    if (!isUser) {
-      const interval = setInterval(() => {
-        setDots((prev) => (prev === 3 ? 1 : prev + 1));
-      }, 400);
-      return () => clearInterval(interval);
-    }
-  }, [isUser]);
+    const interval = setInterval(() => {
+      setDots((prev) => (prev === 3 ? 1 : prev + 1));
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <Text style={{ color: isUser ? 'rgba(255,255,255,0.7)' : colors.icon }}>
+    <Text style={{ lineHeight: 40 }}>
       {' '}
       {'●'.repeat(dots)}
     </Text>
@@ -80,9 +79,9 @@ function ChatBubble({ message, colors }: { message: Message; colors: typeof Colo
             {message.content}
           </Markdown>
         ) : (
-          <Text style={{ color: textColor }}>
+          <Text style={{ color: colors.text }}>
             {message.content}
-            <TypingIndicator isUser={isUser} colors={colors} />
+            <TypingIndicator colors={colors} />
           </Text>
         )}
       </View>
@@ -120,6 +119,7 @@ export default function ChatScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
+  const textInputRef = useRef<TextInput | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const msgCountRef = useRef(0);
   const isSendingRef = useRef(false);
@@ -217,6 +217,10 @@ export default function ChatScreen() {
     async (textOverride?: string) => {
       const text = (textOverride ?? input).trim();
       if (!text || !sessionId || !apiClient || isStreaming || isSendingRef.current) return;
+
+      // Dismiss the keyboard and blur the input when submitting
+      Keyboard.dismiss();
+      textInputRef.current?.blur();
 
       isSendingRef.current = true;
       setInput('');
@@ -354,6 +358,7 @@ export default function ChatScreen() {
           },
         ]}>
         <TextInput
+          ref={textInputRef}
           style={[
             styles.textInput,
             {
@@ -363,6 +368,8 @@ export default function ChatScreen() {
           ]}
           value={input}
           onChangeText={setInput}
+          blurOnSubmit
+          onSubmitEditing={() => sendMessage()}
           placeholder="Ask about Japanese text..."
           placeholderTextColor={colors.icon}
           multiline
