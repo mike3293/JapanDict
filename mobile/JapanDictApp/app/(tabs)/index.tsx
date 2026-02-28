@@ -306,7 +306,7 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
       behavior='height'
-      keyboardVerticalOffset={80}>
+      keyboardVerticalOffset={85}>
       {isLoadingSession && messages.length === 0 ? (
         <View style={styles.center}>
           <ActivityIndicator color={colors.tint} />

@@ -5,13 +5,12 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   useColorScheme,
-  View,
+  View
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
@@ -58,7 +57,7 @@ function KanjiCard({
       <Text style={[card.character, { color: colors.text }]}>{entry.character}</Text>
       <View style={card.info}>
         <View style={card.infoTop}>
-              <JlptBadge level={entry.jlptLevel} />
+          <JlptBadge level={entry.jlptLevel} />
         </View>
         <Text style={[card.meanings, { color: colors.text }]} numberOfLines={2}>
           {entry.meaning}
@@ -195,10 +194,7 @@ export default function KanjiScreen() {
       </View>
 
       {/* JLPT filter pills */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.pillRow}>
+      <View style={styles.pillRow}>
         {JLPT_LEVELS.map((level) => (
           <Pressable
             key={level}
@@ -219,7 +215,7 @@ export default function KanjiScreen() {
             </Text>
           </Pressable>
         ))}
-      </ScrollView>
+      </View>
 
       {/* Count */}
       <Text style={[styles.countText, { color: colors.icon }]}>
@@ -276,10 +272,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchInput: { flex: 1, fontSize: 14 },
-  pillRow: { paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
+  pillRow: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, gap: 8 },
   pill: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 14,
     borderRadius: 20,
   },
   pillText: { fontWeight: '700', fontSize: 13 },
