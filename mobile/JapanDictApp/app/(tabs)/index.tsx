@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useShareIntentContext } from 'expo-share-intent';
 import {
   useCallback,
   useEffect,
@@ -95,7 +94,6 @@ export default function ChatScreen() {
   const navigation = useNavigation();
   const params = useLocalSearchParams<{ sessionId?: string; prompt?: string }>();
   const { apiClient, isLoaded } = useSettingsContext();
-  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState('');
@@ -139,16 +137,6 @@ export default function ChatScreen() {
   useEffect(() => {
     if (params.prompt) setInput(params.prompt);
   }, [params.prompt]);
-
-  // ── Share intent ──────────────────────────────────────────────────────────
-  // TODO: Move on layer above, to open index tab on share
-  useEffect(() => {
-    if (hasShareIntent && shareIntent?.text && sessionId) {
-      const text = shareIntent.text;
-      resetShareIntent();
-      sendMessage(text);
-    }
-  }, [hasShareIntent, sessionId]);
 
   const initSession = async (targetId: string | null) => {
     if (!apiClient) return;

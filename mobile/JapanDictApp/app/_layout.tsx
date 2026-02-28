@@ -1,6 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { ShareIntentProvider } from 'expo-share-intent';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
@@ -16,7 +15,6 @@ export default function RootLayout() {
 
   return (
     <SettingsProvider>
-      <ShareIntentProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -25,7 +23,6 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
-      </ShareIntentProvider>
     </SettingsProvider>
   );
 }

@@ -40,15 +40,6 @@
       "expo-router",
       "expo-secure-store",
       [
-        "expo-share-intent",
-        {
-          "iosActivationRules": {
-            "NSExtensionActivationSupportsText": true
-          },
-          "androidIntentFilters": ["text/*"]
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
