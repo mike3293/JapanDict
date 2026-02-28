@@ -30,14 +30,10 @@ public partial class KanjiIndexService(IMongoCollection<KanjiEntry> kanjiCollect
         var filters = new List<FilterDefinition<KanjiEntry>>
         {
             Builders<KanjiEntry>.Filter.Eq(k => k.Character, query),
-            Builders<KanjiEntry>.Filter.Eq(k => k.JlptLevel, query.ToUpperInvariant())
+            Builders<KanjiEntry>.Filter.Eq(k => k.JlptLevel, query.ToUpperInvariant()),
+            Builders<KanjiEntry>.Filter.Regex(k => k.Meaning,
+                new MongoDB.Bson.BsonRegularExpression(query, "i"))
         };
-
-        if (!string.IsNullOrWhiteSpace(query))
-        {
-            filters.Add(Builders<KanjiEntry>.Filter.Regex(k => k.Meaning,
-                new MongoDB.Bson.BsonRegularExpression(query, "i")));
-        }
 
         var filter = Builders<KanjiEntry>.Filter.And(
             Builders<KanjiEntry>.Filter.Eq(k => k.KeyId, keyId),
