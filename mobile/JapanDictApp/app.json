@@ -25,9 +25,15 @@
       "predictiveBackGestureEnabled": false,
       "intentFilters": [
         {
-          "action": "PROCESS_TEXT",
-          "category": ["DEFAULT"],
-          "data": [{ "mimeType": "text/*" }]
+          "action": "android.intent.action.PROCESS_TEXT",
+          "category": [
+            "android.intent.category.DEFAULT"
+          ],
+          "data": [
+            {
+              "mimeType": "text/*"
+            }
+          ]
         }
       ],
       "package": "com.japandict"
@@ -50,7 +56,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "./plugins/with-process-text"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -35,7 +35,7 @@ interface Message extends ChatMessage {
   isStreaming?: boolean;
 }
 
-function TypingIndicator({ colors }: { isUser: boolean; colors: typeof Colors.light }) {
+function TypingIndicator({ colors }: { colors: typeof Colors.light }) {
   const [dots, setDots] = useState(1);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function ChatScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const params = useLocalSearchParams<{ sessionId?: string; prompt?: string }>();
+  const params = useLocalSearchParams<{ sessionId?: string; prompt?: string; sharedText?: string }>();
   const { apiClient, isLoaded } = useSettingsContext();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -108,6 +108,7 @@ export default function ChatScreen() {
   const abortRef = useRef<AbortController | null>(null);
   const msgCountRef = useRef(0);
   const isSendingRef = useRef(false);
+  const lastSharedTextRef = useRef<string | null>(null);
 
   // ── Configure header ─────────────────────────────────────────────────────
   useLayoutEffect(() => {
@@ -267,6 +268,23 @@ export default function ChatScreen() {
     [input, sessionId, apiClient, isStreaming],
   );
 
+
+  useEffect(() => {
+    const sharedText = params.sharedText?.trim();
+
+    if (!sharedText || !sessionId || !apiClient || isStreaming) {
+      return;
+    }
+
+    if (lastSharedTextRef.current === sharedText) {
+      return;
+    }
+
+    lastSharedTextRef.current = sharedText;
+    setInput(sharedText);
+    sendMessage(sharedText);
+  }, [apiClient, isStreaming, params.sharedText, sendMessage, sessionId]);
+
   if (!isLoaded) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
@@ -304,7 +322,7 @@ export default function ChatScreen() {
         <View style={styles.center}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>JapanDict</Text>
           <Text style={[styles.emptyText, { color: colors.icon }]}>
-            Send any Japanese text and I'll break down the kanji, grammar, and vocabulary.
+            Send any Japanese text and I&apos;ll break down the kanji, grammar, and vocabulary.
           </Text>
         </View>
       ) : (
