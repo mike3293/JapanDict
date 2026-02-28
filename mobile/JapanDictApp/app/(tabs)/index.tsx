@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { useShareIntentContext } from 'expo-share-intent';
 import {
   useCallback,
   useEffect,
@@ -11,20 +12,18 @@ import {
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Keyboard,
+  KeyboardAvoidingView,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   useColorScheme,
   View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useShareIntentContext } from 'expo-share-intent';
 
 import { Colors } from '@/constants/theme';
 import { useSettingsContext } from '@/contexts/settings-context';
@@ -97,18 +96,6 @@ export default function ChatScreen() {
   const params = useLocalSearchParams<{ sessionId?: string; prompt?: string }>();
   const { apiClient, isLoaded } = useSettingsContext();
   const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
-
-  // Show a simple alert when the app receives a PROCESS_TEXT intent
-  useEffect(() => {
-    if (!hasShareIntent || !shareIntent?.text) return;
-    const action = shareIntent.action ?? '';
-    const isProcessText = action.includes('PROCESS_TEXT') || action === 'android.intent.action.PROCESS_TEXT';
-    if (isProcessText) {
-      Alert.alert('Shared text', shareIntent.text, [
-        { text: 'OK', onPress: () => resetShareIntent() },
-      ]);
-    }
-  }, [hasShareIntent, shareIntent]);
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState('');
@@ -405,7 +392,7 @@ const styles = StyleSheet.create({
   bubbleRowAssistant: { justifyContent: 'flex-start' },
   bubble: { maxWidth: '80%', borderRadius: 18, paddingHorizontal: 14 },
   bubbleUser: { borderBottomRightRadius: 4 },
-  bubbleAssistant: { borderBottomLeftRadius: 4 },
+  bubbleAssistant: { borderBottomLeftRadius: 4, paddingVertical: 7 },
   errorBanner: {
     marginHorizontal: 12,
     marginBottom: 4,
