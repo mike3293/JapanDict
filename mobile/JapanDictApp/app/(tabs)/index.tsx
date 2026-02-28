@@ -73,13 +73,14 @@ function ChatBubble({ message, colors }: { message: Message; colors: typeof Colo
             style={{
               heading1: { fontSize: 24 },
               heading2: { fontSize: 18 },
+              body: { color: colors.text },
               link: { color: colors.tint },
             }}
           >
             {message.content}
           </Markdown>
         ) : (
-          <Text>
+          <Text style={{ color: textColor }}>
             {message.content}
             <TypingIndicator isUser={isUser} colors={colors} />
           </Text>
@@ -121,6 +122,7 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
   const abortRef = useRef<AbortController | null>(null);
   const msgCountRef = useRef(0);
+  const isSendingRef = useRef(false);
 
   // ── Configure header ─────────────────────────────────────────────────────
   useLayoutEffect(() => {
@@ -214,8 +216,9 @@ export default function ChatScreen() {
   const sendMessage = useCallback(
     async (textOverride?: string) => {
       const text = (textOverride ?? input).trim();
-      if (!text || !sessionId || !apiClient || isStreaming) return;
+      if (!text || !sessionId || !apiClient || isStreaming || isSendingRef.current) return;
 
+      isSendingRef.current = true;
       setInput('');
       setError(null);
       setIsStreaming(true);
@@ -265,6 +268,7 @@ export default function ChatScreen() {
           });
           msgCountRef.current += 2;
           setIsStreaming(false);
+          isSendingRef.current = false;
           if (isFirst) {
             apiClient.getSession(sessionId).then((s) => {
               if (s?.title) setSessionTitle(s.title);
@@ -275,6 +279,7 @@ export default function ChatScreen() {
           setError(err.message);
           setMessages((prev) => prev.filter((m) => m.localId !== assistantId));
           setIsStreaming(false);
+          isSendingRef.current = false;
         },
         abort.signal,
       );
