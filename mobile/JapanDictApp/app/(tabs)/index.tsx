@@ -141,6 +141,7 @@ export default function ChatScreen() {
   }, [params.prompt]);
 
   // ── Share intent ──────────────────────────────────────────────────────────
+  // TODO: Move on layer above, to open index tab on share
   useEffect(() => {
     if (hasShareIntent && shareIntent?.text && sessionId) {
       const text = shareIntent.text;
