@@ -11,7 +11,7 @@ const PROCESS_TEXT_HANDLER = `
       return
     }
 
-    val deepLink = Uri.parse("japandict://process-text?content=")
+    val deepLink = Uri.parse("japandict://process-text")
       .buildUpon()
       .appendQueryParameter("content", sharedText)
       .build()
@@ -25,12 +25,27 @@ const PROCESS_TEXT_HANDLER = `
   }
 `;
 
-function ensureImport(src, value) {
-  if (src.includes(value)) {
+function ensureImport(src, importLine) {
+  if (src.includes(importLine)) {
     return src;
   }
 
-  return `${value}\n${src}`;
+  const packageMatch = src.match(/^package\s+[^\n]+\n/m);
+  if (!packageMatch) {
+    return `${importLine}\n${src}`;
+  }
+
+  const packageEnd = packageMatch.index + packageMatch[0].length;
+  const rest = src.slice(packageEnd);
+  const importMatches = [...rest.matchAll(/^import\s+[^\n]+\n/gm)];
+
+  if (importMatches.length === 0) {
+    return `${src.slice(0, packageEnd)}\n${importLine}\n${rest}`;
+  }
+
+  const lastImport = importMatches[importMatches.length - 1];
+  const insertAt = packageEnd + lastImport.index + lastImport[0].length;
+  return `${src.slice(0, insertAt)}${importLine}\n${src.slice(insertAt)}`;
 }
 
 function ensureHandleMethod(src) {
@@ -42,12 +57,22 @@ function ensureHandleMethod(src) {
 }
 
 function ensureOnCreateCall(src) {
-  const target = 'super.onCreate(null)';
-  if (!src.includes(target) || src.includes('handleProcessTextIntent(intent)')) {
+  if (src.includes('handleProcessTextIntent(intent)')) {
     return src;
   }
 
-  return src.replace(target, `${target}\n    handleProcessTextIntent(intent)`);
+  if (src.includes('super.onCreate(null)')) {
+    return src.replace('super.onCreate(null)', 'super.onCreate(null)\n    handleProcessTextIntent(intent)');
+  }
+
+  if (src.includes('super.onCreate(savedInstanceState)')) {
+    return src.replace(
+      'super.onCreate(savedInstanceState)',
+      'super.onCreate(savedInstanceState)\n    handleProcessTextIntent(intent)',
+    );
+  }
+
+  return src;
 }
 
 function ensureOnNewIntent(src) {
@@ -55,10 +80,15 @@ function ensureOnNewIntent(src) {
     return src;
   }
 
-  return src.replace(
-    /override fun onCreate\(savedInstanceState: Bundle\?\) \{[\s\S]*?\n  }/,
-    (match) => `${match}\n\n  override fun onNewIntent(intent: Intent?) {\n    super.onNewIntent(intent)\n    setIntent(intent)\n    handleProcessTextIntent(intent)\n  }`,
-  );
+  const marker = 'override fun getMainComponentName(): String = "main"';
+  if (src.includes(marker)) {
+    return src.replace(
+      marker,
+      `override fun onNewIntent(intent: Intent?) {\n    super.onNewIntent(intent)\n    setIntent(intent)\n    handleProcessTextIntent(intent)\n  }\n\n  ${marker}`,
+    );
+  }
+
+  return src;
 }
 
 module.exports = function withProcessText(config) {
