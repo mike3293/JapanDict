@@ -1,8 +1,8 @@
 const { withMainActivity } = require('expo/config-plugins');
 
 const PROCESS_TEXT_HANDLER = `
-  private fun handleProcessTextIntent(intent: Intent?) {
-    if (intent?.action != Intent.ACTION_PROCESS_TEXT) {
+  private fun handleProcessTextIntent(intent: Intent) {
+    if (intent.action != Intent.ACTION_PROCESS_TEXT) {
       return
     }
 
@@ -49,8 +49,12 @@ function ensureImport(src, importLine) {
 }
 
 function ensureHandleMethod(src) {
-  if (src.includes('handleProcessTextIntent(intent: Intent?)')) {
+  if (src.includes('handleProcessTextIntent(intent: Intent)')) {
     return src;
+  }
+
+  if (src.includes('handleProcessTextIntent(intent: Intent?)')) {
+    return src.replace('handleProcessTextIntent(intent: Intent?)', 'handleProcessTextIntent(intent: Intent)');
   }
 
   return src.replace(/\n}\s*$/, `${PROCESS_TEXT_HANDLER}\n}`);
@@ -76,15 +80,19 @@ function ensureOnCreateCall(src) {
 }
 
 function ensureOnNewIntent(src) {
-  if (src.includes('override fun onNewIntent(intent: Intent?)')) {
+  if (src.includes('override fun onNewIntent(intent: Intent)')) {
     return src;
+  }
+
+  if (src.includes('override fun onNewIntent(intent: Intent?)')) {
+    return src.replace('override fun onNewIntent(intent: Intent?)', 'override fun onNewIntent(intent: Intent)');
   }
 
   const marker = 'override fun getMainComponentName(): String = "main"';
   if (src.includes(marker)) {
     return src.replace(
       marker,
-      `override fun onNewIntent(intent: Intent?) {\n    super.onNewIntent(intent)\n    setIntent(intent)\n    handleProcessTextIntent(intent)\n  }\n\n  ${marker}`,
+      `override fun onNewIntent(intent: Intent) {\n    super.onNewIntent(intent)\n    setIntent(intent)\n    handleProcessTextIntent(intent)\n  }\n\n  ${marker}`,
     );
   }
 
