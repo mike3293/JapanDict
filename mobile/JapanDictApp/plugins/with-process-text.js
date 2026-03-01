@@ -1,14 +1,14 @@
 const { withMainActivity } = require('expo/config-plugins');
 
-const PROCESS_TEXT_HANDLER = `
-  private fun handleProcessTextIntent(intent: Intent) {
+const PROCESS_TEXT_HELPERS = `
+  private fun mapProcessTextIntent(intent: Intent): Intent {
     if (intent.action != Intent.ACTION_PROCESS_TEXT) {
-      return
+      return intent
     }
 
     val sharedText = intent.getStringExtra(Intent.EXTRA_PROCESS_TEXT)
     if (sharedText.isNullOrBlank()) {
-      return
+      return intent
     }
 
     val deepLink = Uri.parse("japandict://process-text")
@@ -16,12 +16,10 @@ const PROCESS_TEXT_HANDLER = `
       .appendQueryParameter("content", sharedText)
       .build()
 
-    val routeIntent = Intent(Intent.ACTION_VIEW, deepLink).apply {
+    return Intent(Intent.ACTION_VIEW, deepLink).apply {
       addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
       setPackage(packageName)
     }
-
-    startActivity(routeIntent)
   }
 `;
 
@@ -48,31 +46,37 @@ function ensureImport(src, importLine) {
   return `${src.slice(0, insertAt)}${importLine}\n${src.slice(insertAt)}`;
 }
 
-function ensureHandleMethod(src) {
-  if (src.includes('handleProcessTextIntent(intent: Intent)')) {
+function ensureHelperMethod(src) {
+  if (src.includes('private fun mapProcessTextIntent(intent: Intent): Intent')) {
     return src;
   }
 
-  if (src.includes('handleProcessTextIntent(intent: Intent?)')) {
-    return src.replace('handleProcessTextIntent(intent: Intent?)', 'handleProcessTextIntent(intent: Intent)');
+  if (src.includes('private fun handleProcessTextIntent(intent: Intent)')) {
+    return src
+      .replace(/\n\s*private fun handleProcessTextIntent\(intent: Intent\)[\s\S]*?\n\s*}\n/, '\n')
+      .replace(/\n}\s*$/, `${PROCESS_TEXT_HELPERS}\n}`);
   }
 
-  return src.replace(/\n}\s*$/, `${PROCESS_TEXT_HANDLER}\n}`);
+  return src.replace(/\n}\s*$/, `${PROCESS_TEXT_HELPERS}\n}`);
 }
 
-function ensureOnCreateCall(src) {
-  if (src.includes('handleProcessTextIntent(intent)')) {
+function ensureOnCreateIntentMapping(src) {
+  if (src.includes('setIntent(mapProcessTextIntent(intent))')) {
     return src;
+  }
+
+  if (src.includes('handleProcessTextIntent(intent)')) {
+    return src.replace('handleProcessTextIntent(intent)', 'setIntent(mapProcessTextIntent(intent))');
   }
 
   if (src.includes('super.onCreate(null)')) {
-    return src.replace('super.onCreate(null)', 'super.onCreate(null)\n    handleProcessTextIntent(intent)');
+    return src.replace('super.onCreate(null)', 'super.onCreate(null)\n    setIntent(mapProcessTextIntent(intent))');
   }
 
   if (src.includes('super.onCreate(savedInstanceState)')) {
     return src.replace(
       'super.onCreate(savedInstanceState)',
-      'super.onCreate(savedInstanceState)\n    handleProcessTextIntent(intent)',
+      'super.onCreate(savedInstanceState)\n    setIntent(mapProcessTextIntent(intent))',
     );
   }
 
@@ -80,20 +84,26 @@ function ensureOnCreateCall(src) {
 }
 
 function ensureOnNewIntent(src) {
-  if (src.includes('override fun onNewIntent(intent: Intent)')) {
+  const newMethod = `override fun onNewIntent(intent: Intent) {\n    val mappedIntent = mapProcessTextIntent(intent)\n    super.onNewIntent(mappedIntent)\n    setIntent(mappedIntent)\n  }`;
+
+  if (src.includes(newMethod)) {
     return src;
   }
 
   if (src.includes('override fun onNewIntent(intent: Intent?)')) {
-    return src.replace('override fun onNewIntent(intent: Intent?)', 'override fun onNewIntent(intent: Intent)');
+    return src.replace(
+      /override fun onNewIntent\(intent: Intent\?\) \{[\s\S]*?\n\s*}\n/,
+      `${newMethod}\n`,
+    );
+  }
+
+  if (src.includes('override fun onNewIntent(intent: Intent)')) {
+    return src.replace(/override fun onNewIntent\(intent: Intent\) \{[\s\S]*?\n\s*}\n/, `${newMethod}\n`);
   }
 
   const marker = 'override fun getMainComponentName(): String = "main"';
   if (src.includes(marker)) {
-    return src.replace(
-      marker,
-      `override fun onNewIntent(intent: Intent) {\n    super.onNewIntent(intent)\n    setIntent(intent)\n    handleProcessTextIntent(intent)\n  }\n\n  ${marker}`,
-    );
+    return src.replace(marker, `${newMethod}\n\n  ${marker}`);
   }
 
   return src;
@@ -108,9 +118,9 @@ module.exports = function withProcessText(config) {
     let src = mod.modResults.contents;
     src = ensureImport(src, 'import android.content.Intent');
     src = ensureImport(src, 'import android.net.Uri');
-    src = ensureOnCreateCall(src);
+    src = ensureOnCreateIntentMapping(src);
     src = ensureOnNewIntent(src);
-    src = ensureHandleMethod(src);
+    src = ensureHelperMethod(src);
 
     mod.modResults.contents = src;
     return mod;

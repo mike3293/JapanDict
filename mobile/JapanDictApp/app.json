@@ -36,7 +36,8 @@
           ]
         }
       ],
-      "package": "com.japandict"
+      "package": "com.japandict",
+      "launchMode": "singleTask"
     },
     "web": {
       "output": "static",

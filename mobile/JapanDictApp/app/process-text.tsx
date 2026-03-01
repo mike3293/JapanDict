@@ -9,7 +9,7 @@ export default function ProcessTextHandler() {
     const incomingText = content?.trim();
 
     router.replace({
-      pathname: '/(tabs)',
+      pathname: '/(tabs)/index',
       params: incomingText ? { sharedText: incomingText } : undefined,
     });
   }, [content, router]);
