@@ -15,8 +15,8 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <SettingsProvider>
-      <ShareIntentProvider>
+    <ShareIntentProvider>
+      <SettingsProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -25,7 +25,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>
-      </ShareIntentProvider>
-    </SettingsProvider>
+      </SettingsProvider>
+    </ShareIntentProvider>
   );
 }
