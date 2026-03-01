@@ -116,8 +116,8 @@ export default function HistoryScreen() {
       ) : (
         <FlatList
           data={sessions}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          keyExtractor={(item: ChatSessionInfo) => item.id}
+          renderItem={({ item }: { item: ChatSessionInfo }) => (
             <SessionRow session={item} colors={colors} onPress={() => handleTap(item)} />
           )}
         />

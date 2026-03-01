@@ -25,7 +25,7 @@ export default function TabLayout() {
         options={{
           title: 'JapanDict',
           tabBarLabel: 'Chat',
-          tabBarIcon: ({ color }) => <Ionicons name="chatbubble-ellipses" size={24} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="chatbubble-ellipses" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -33,7 +33,7 @@ export default function TabLayout() {
         options={{
           title: 'Kanji Encyclopedia',
           tabBarLabel: 'Kanji',
-          tabBarIcon: ({ color }) => <Ionicons name="book" size={24} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="book" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -41,7 +41,7 @@ export default function TabLayout() {
         options={{
           title: 'History',
           tabBarLabel: 'History',
-          tabBarIcon: ({ color }) => <Ionicons name="time" size={24} color={color} />,
+          tabBarIcon: ({ color }: { color: string }) => <Ionicons name="time" size={24} color={color} />,
         }}
       />
     </Tabs>

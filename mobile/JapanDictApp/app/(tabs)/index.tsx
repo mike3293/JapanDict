@@ -36,7 +36,7 @@ interface Message extends ChatMessage {
   isStreaming?: boolean;
 }
 
-function TypingIndicator({ colors }: { isUser: boolean; colors: typeof Colors.light }) {
+function TypingIndicator() {
   const [dots, setDots] = useState(1);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ function ChatBubble({ message, colors }: { message: Message; colors: typeof Colo
         ) : (
           <Text style={{ color: colors.text }}>
             {message.content}
-            <TypingIndicator colors={colors} />
+            <TypingIndicator />
           </Text>
         )}
       </View>
@@ -105,7 +105,7 @@ export default function ChatScreen() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<Message>>(null);
   const textInputRef = useRef<TextInput | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const msgCountRef = useRef(0);
@@ -323,10 +323,8 @@ export default function ChatScreen() {
         <FlatList
           ref={flatListRef}
           data={messages}
-          keyExtractor={(item) => item.localId}
-          renderItem={({ item }) => <ChatBubble message={item} colors={colors} />}
-          contentContainerStyle={styles.messageList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          keyExtractor={(item: Message) => item.localId}
+          renderItem={({ item }: { item: Message }) => <ChatBubble message={item} colors={colors} />}
         />
       )}
 

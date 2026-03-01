@@ -245,11 +245,10 @@ export default function KanjiScreen() {
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          keyExtractor={(item: KanjiEntry) => item.id}
+          renderItem={({ item }: { item: KanjiEntry }) => (
             <KanjiCard entry={item} colors={colors} onPress={() => handleTapKanji(item)} />
           )}
-          contentContainerStyle={{ paddingVertical: 8 }}
         />
       )}
     </View>
