@@ -131,7 +131,7 @@ jobs:
         working-directory: ${{ env.MOBILE_APP_DIR }}
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
-          eas build --platform android --profile production-apk --local --non-interactive --output=./app-prod.apk
+          eas build --platform android --profile preview --local --non-interactive --output=./app-prod.apk
         env:
           NODE_ENV: production
 
