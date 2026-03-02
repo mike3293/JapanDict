@@ -126,14 +126,13 @@ export default function ChatScreen() {
         </View>
       ),
     });
-  }, [sessionTitle, colors]);
+  }, [sessionTitle, colors, handleNewSession, navigation]);
 
   // ── Load / create session ─────────────────────────────────────────────────
   useEffect(() => {
     if (!isLoaded) return;
-    if (!apiClient) return;
     initSession(params.sessionId ?? null);
-  }, [isLoaded, apiClient, params.sessionId]);
+  }, [isLoaded, initSession, params.sessionId]);
 
   // ── Inject prompt param (from kanji tab) ──────────────────────────────────
   useEffect(() => {
@@ -148,9 +147,9 @@ export default function ChatScreen() {
       resetShareIntent();
       sendMessage(text);
     }
-  }, [hasShareIntent, sessionId]);
+  }, [hasShareIntent, resetShareIntent, sendMessage, sessionId, shareIntent?.text]);
 
-  const initSession = async (targetId: string | null) => {
+  const initSession = useCallback(async (targetId: string | null) => {
     if (!apiClient) return;
     setIsLoadingSession(true);
     setError(null);
@@ -178,9 +177,9 @@ export default function ChatScreen() {
     } finally {
       setIsLoadingSession(false);
     }
-  };
+  }, [apiClient]);
 
-  const handleNewSession = async () => {
+  const handleNewSession = useCallback(async () => {
     if (!apiClient) return;
     abortRef.current?.abort();
     setIsStreaming(false);
@@ -199,7 +198,7 @@ export default function ChatScreen() {
     } finally {
       setIsLoadingSession(false);
     }
-  };
+  }, [apiClient]);
 
   const sendMessage = useCallback(
     async (textOverride?: string) => {
@@ -248,7 +247,6 @@ export default function ChatScreen() {
             next[idx] = { ...next[idx], content: next[idx].content + token, isStreaming: true };
             return next;
           });
-          flatListRef.current?.scrollToEnd({ animated: false });
         },
         () => {
           setMessages((prev) => {
@@ -315,8 +313,8 @@ export default function ChatScreen() {
       ) : messages.length === 0 ? (
         <View style={styles.center}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>JapanDict</Text>
-          <Text style={[styles.emptyText, { color: colors.icon }]}>
-            Send any Japanese text and I'll break down the kanji, grammar, and vocabulary.
+          <Text style={[styles.emptyText, { color: colors.icon }]}> 
+            Send any Japanese text and I&apos;ll break down the kanji, grammar, and vocabulary.
           </Text>
         </View>
       ) : (

@@ -111,7 +111,7 @@ export default function KanjiScreen() {
       const data = await apiClient.getKanji();
       setAllKanji(data);
       setFiltered(data);
-    } catch (e) {
+    } catch {
       setError('Failed to load kanji. Check your settings.');
     } finally {
       setIsLoading(false);
