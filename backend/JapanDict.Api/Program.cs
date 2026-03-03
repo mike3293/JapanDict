@@ -10,7 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 // ── Options ───────────────────────────────────────────────────────────────
 builder.Services.Configure<CosmosDbOptions>(builder.Configuration.GetSection(CosmosDbOptions.SectionName));
 builder.Services.Configure<AzureOpenAIOptions>(builder.Configuration.GetSection(AzureOpenAIOptions.SectionName));
-builder.Services.Configure<SeedingOptions>(builder.Configuration.GetSection(SeedingOptions.SectionName));
 
 // ── MongoDB / Cosmos DB ────────────────────────────────────────────────────
 var cosmosDbOptions = builder.Configuration.GetSection(CosmosDbOptions.SectionName).Get<CosmosDbOptions>()
@@ -19,7 +18,6 @@ var cosmosDbOptions = builder.Configuration.GetSection(CosmosDbOptions.SectionNa
 var mongoClient = new MongoClient(cosmosDbOptions.ConnectionString);
 var database = mongoClient.GetDatabase(cosmosDbOptions.DatabaseName);
 
-builder.Services.AddSingleton(database.GetCollection<AccessKey>("access_keys"));
 builder.Services.AddSingleton(database.GetCollection<ChatSession>("chat_sessions"));
 builder.Services.AddSingleton(database.GetCollection<KanjiEntry>("kanji_index"));
 

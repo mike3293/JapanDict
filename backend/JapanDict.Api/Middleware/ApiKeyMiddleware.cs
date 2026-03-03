@@ -1,11 +1,11 @@
-using JapanDict.Api.Models;
-using MongoDB.Driver;
+using System.Text.Json;
 
 namespace JapanDict.Api.Middleware;
 
-public class ApiKeyMiddleware(RequestDelegate next, IMongoCollection<AccessKey> accessKeys)
+public class ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration)
 {
     private const string ApiKeyHeader = "X-Api-Key";
+    private readonly HashSet<string> accessKeys = ParseAccessKeys(configuration["AccessKeys"]);
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -24,14 +24,11 @@ public class ApiKeyMiddleware(RequestDelegate next, IMongoCollection<AccessKey> 
         }
 
         var key = rawKey.ToString().Trim();
-        var record = await accessKeys
-            .Find(k => k.Id == key)
-            .FirstOrDefaultAsync();
 
-        if (record is null || !record.IsActive)
+        if (!accessKeys.Contains(key))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { error = "Invalid or inactive API key." });
+            await context.Response.WriteAsJsonAsync(new { error = "Invalid API key." });
             return;
         }
 
@@ -39,6 +36,23 @@ public class ApiKeyMiddleware(RequestDelegate next, IMongoCollection<AccessKey> 
         context.Items["ApiKeyId"] = key;
 
         await next(context);
+    }
+
+    private static HashSet<string> ParseAccessKeys(string? rawAccessKeys)
+    {
+        if (string.IsNullOrWhiteSpace(rawAccessKeys))
+            return new HashSet<string>(StringComparer.Ordinal);
+
+        var parsed = JsonSerializer.Deserialize<string[]>(rawAccessKeys);
+        if (parsed is null)
+        {
+            return new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        return parsed
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .Select(k => k.Trim())
+            .ToHashSet(StringComparer.Ordinal);
     }
 }
 

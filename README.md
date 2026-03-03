@@ -52,7 +52,7 @@ JapanDict is built around a simple workflow:
 │                                                             │
 │  ┌──────────────────┐    ┌──────────────────────────────┐  │
 │  │  Auth Middleware │    │  Chat Controller             │  │
-│  │  (API Key table) │    │  - /chat/sessions            │  │
+│  │  (Env key list)  │    │  - /chat/sessions            │  │
 │  └──────────────────┘    │  - /chat/sessions/{id}/msgs  │  │
 │                          └──────────────┬───────────────┘  │
 │  ┌──────────────────┐                   │                   │
@@ -64,7 +64,6 @@ JapanDict is built around a simple workflow:
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │              Azure Cosmos DB (Free Tier)             │   │
 │  │  Collections:                                        │   │
-│  │   • access_keys   { key, isActive, label }           │   │
 │  │   • chat_sessions { keyId, messages[] }              │   │
 │  │   • kanji_index   { keyId, character, meaning }      │   │
 │  └─────────────────────────────────────────────────────┘   │
@@ -92,7 +91,7 @@ JapanDict is built around a simple workflow:
 
 ### Backend
 - **AI Integration** — proxies requests to Azure OpenAI with a structured system prompt tailored for kanji/vocabulary analysis.
-- **Access Key Auth** — every request must include a valid API key (`X-Api-Key` header). Keys are stored in Cosmos DB with an `isActive` flag managed manually by the administrator.
+- **Access Key Auth** — every request must include a valid API key (`X-Api-Key` header). Valid keys are configured via the `AccessKeys` environment variable.
 - **Per-Key History** — all chat messages and dictionary entries are scoped to an access key, keeping data isolated per user/device.
 - **REST API** — clean versioned REST endpoints consumed by the mobile app.
 
@@ -141,21 +140,16 @@ Every request must include the header:
 X-Api-Key: <your-access-key>
 ```
 
-The `ApiKeyMiddleware` looks up the key in the `access_keys` Cosmos DB collection. If it does not exist or `isActive` is `false`, the request is rejected with `401 Unauthorized`.
+The `ApiKeyMiddleware` validates the key against `AccessKeys` from configuration/environment. If the key is not present, the request is rejected with `401 Unauthorized`.
 
-Access keys are **created manually** by the administrator directly in Cosmos DB (or via a seeding script). There is no self-registration endpoint.
+Use this format for `AccessKeys`:
+```text
+["key1", "key2"]
+```
+
+There is no self-registration endpoint.
 
 ### Cosmos DB Collections
-
-**`access_keys`**
-```json
-{
-  "_id": "key_abc123",
-  "label": "My iPhone",
-  "isActive": true,
-  "createdAt": "2026-02-22T00:00:00Z"
-}
-```
 
 **`chat_sessions`**
 ```json
@@ -231,7 +225,7 @@ The access key is stored in the device's secure storage (`expo-secure-store` or 
 | Resource Group | `japandict-rg` |
 | Azure Cosmos DB Account | Mongo API, Free Tier enabled |
 | Cosmos DB Database | `japandict-db` |
-| Cosmos DB Collections | `access_keys`, `chat_sessions`, `kanji_index` |
+| Cosmos DB Collections | `chat_sessions`, `kanji_index` |
 | Azure OpenAI Service | `S0` tier, GPT-4o deployment |
 | App Service Plan | Linux, `F1` Free (or `B1` Basic) |
 | App Service | Backend Docker container |
@@ -275,8 +269,7 @@ The pipeline (`.github/workflows/push.yml`) triggers on every push to `main` and
 | `AZURE_CLIENT_SECRET` | Secret | Service principal client secret |
 | `AZURE_TENANT_ID` | Secret | Azure tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Secret | Azure subscription ID |
-| `AZURE_OPENAI_ENDPOINT` | Secret | Azure OpenAI endpoint URL |
-| `AZURE_OPENAI_KEY` | Secret | Azure OpenAI API key |
+| `ACCESS_KEYS` | Azure variable | API key array string, e.g. `["key1", "key2"]` |
 
 ---
 
@@ -285,7 +278,7 @@ The pipeline (`.github/workflows/push.yml`) triggers on every push to `main` and
 ### Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Node.js 20+](https://nodejs.org/) + Yarn
+- [Node.js 20+](https://nodejs.org/)
 - [Docker](https://www.docker.com/)
 - [Pulumi CLI](https://www.pulumi.com/docs/install/)
 - [Expo CLI](https://docs.expo.dev/get-started/installation/) (for mobile)
@@ -332,7 +325,8 @@ npx expo start
     "Endpoint": "https://<resource>.openai.azure.com/",
     "ApiKey": "<key>",
     "DeploymentName": "gpt-4o"
-  }
+  },
+  "AccessKeys": "[\"key1\", \"key2\"]"
 }
 ```
 
@@ -348,5 +342,4 @@ npx expo start
 - [x] React Native app — Kanji Encyclopedia tab
 - [x] React Native app — Session History screen
 - [x] Share intent integration (Android + iOS)
-- [ ] Offline kanji cache on device
-- [ ] CI/CD for mobile app (EAS Build)
+- [x] CI/CD for mobile app (EAS Build)
