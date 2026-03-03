@@ -38,7 +38,8 @@ jobs:
 
       - name: Rename APK
         run: |
-          mv mobile/JapanDictApp/android/app/build/outputs/apk/release/app-release.apk japan-dict-${{ github.run_number }}.apk
+          APK_PATH=$(ls android/app/build/outputs/apk/release/app-release.apk | head -n 1)
+          mv "$APK_PATH" "$GITHUB_WORKSPACE/japan-dict-${{ github.run_number }}.apk"
 
       # - name: Upload APK artifact
       #   uses: actions/upload-artifact@v4
