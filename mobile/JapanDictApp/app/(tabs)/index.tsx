@@ -111,43 +111,10 @@ export default function ChatScreen() {
   const msgCountRef = useRef(0);
   const isSendingRef = useRef(false);
 
-  // ── Configure header ─────────────────────────────────────────────────────
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: sessionTitle || 'JapanDict',
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', gap: 4, marginRight: 4 }}>
-          <Pressable onPress={handleNewSession} hitSlop={8} style={{ padding: 6 }}>
-            <Ionicons name="add-circle-outline" size={24} color={colors.tint} />
-          </Pressable>
-          <Pressable onPress={() => router.push('/settings')} hitSlop={8} style={{ padding: 6 }}>
-            <Ionicons name="settings-outline" size={22} color={colors.icon} />
-          </Pressable>
-        </View>
-      ),
-    });
-  }, [sessionTitle, colors, handleNewSession, navigation]);
-
-  // ── Load / create session ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isLoaded) return;
-    initSession(params.sessionId ?? null);
-  }, [isLoaded, initSession, params.sessionId]);
-
   // ── Inject prompt param (from kanji tab) ──────────────────────────────────
   useEffect(() => {
     if (params.prompt) setInput(params.prompt);
   }, [params.prompt]);
-
-  // ── Share intent ──────────────────────────────────────────────────────────
-  // TODO: Move on layer above, to open index tab on share
-  useEffect(() => {
-    if (hasShareIntent && shareIntent?.text && sessionId) {
-      const text = shareIntent.text;
-      resetShareIntent();
-      sendMessage(text);
-    }
-  }, [hasShareIntent, resetShareIntent, sendMessage, sessionId, shareIntent?.text]);
 
   const initSession = useCallback(async (targetId: string | null) => {
     if (!apiClient) return;
@@ -179,6 +146,12 @@ export default function ChatScreen() {
     }
   }, [apiClient]);
 
+  // ── Load / create session ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isLoaded) return;
+    initSession(params.sessionId ?? null);
+  }, [isLoaded, initSession, params.sessionId]);
+
   const handleNewSession = useCallback(async () => {
     if (!apiClient) return;
     abortRef.current?.abort();
@@ -199,6 +172,23 @@ export default function ChatScreen() {
       setIsLoadingSession(false);
     }
   }, [apiClient]);
+
+  // ── Configure header ─────────────────────────────────────────────────────
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: sessionTitle || 'JapanDict',
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', gap: 4, marginRight: 4 }}>
+          <Pressable onPress={handleNewSession} hitSlop={8} style={{ padding: 6 }}>
+            <Ionicons name="add-circle-outline" size={24} color={colors.tint} />
+          </Pressable>
+          <Pressable onPress={() => router.push('/settings')} hitSlop={8} style={{ padding: 6 }}>
+            <Ionicons name="settings-outline" size={22} color={colors.icon} />
+          </Pressable>
+        </View>
+      ),
+    });
+  }, [sessionTitle, colors, handleNewSession, navigation]);
 
   const sendMessage = useCallback(
     async (textOverride?: string) => {
@@ -277,6 +267,16 @@ export default function ChatScreen() {
     [input, sessionId, apiClient, isStreaming],
   );
 
+  // ── Share intent ──────────────────────────────────────────────────────────
+  // TODO: Move on layer above, to open index tab on share
+  useEffect(() => {
+    if (hasShareIntent && shareIntent?.text && sessionId) {
+      const text = shareIntent.text;
+      resetShareIntent();
+      sendMessage(text);
+    }
+  }, [hasShareIntent, resetShareIntent, sendMessage, sessionId, shareIntent?.text]);
+
   if (!isLoaded) {
     return (
       <View style={[styles.center, { backgroundColor: colors.background }]}>
@@ -313,7 +313,7 @@ export default function ChatScreen() {
       ) : messages.length === 0 ? (
         <View style={styles.center}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>JapanDict</Text>
-          <Text style={[styles.emptyText, { color: colors.icon }]}> 
+          <Text style={[styles.emptyText, { color: colors.icon }]}>
             Send any Japanese text and I&apos;ll break down the kanji, grammar, and vocabulary.
           </Text>
         </View>
