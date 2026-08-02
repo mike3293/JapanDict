@@ -69,7 +69,7 @@ const miniDeployment = new azure.cognitiveservices.Deployment('gpt-5-4-mini-depl
     },
     sku: {
         name: 'GlobalStandard',
-        capacity: 10,
+        capacity: 1000,
     },
 }, { dependsOn: [foundryAccount] });
 
