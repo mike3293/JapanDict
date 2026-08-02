@@ -1,10 +1,10 @@
 namespace JapanDict.Api.Options;
 
-public class AzureOpenAIOptions
+public class FoundryAiOptions
 {
-    public const string SectionName = "AzureOpenAI";
+    public const string SectionName = "FoundryAI";
 
     public string Endpoint { get; set; } = string.Empty;
     public string ApiKey { get; set; } = string.Empty;
-    public string DeploymentName { get; set; } = "gpt-4o";
+    public string Model { get; set; } = "gpt-5.4-mini";
 }

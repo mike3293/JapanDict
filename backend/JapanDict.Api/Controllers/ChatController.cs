@@ -9,7 +9,7 @@ namespace JapanDict.Api.Controllers;
 [Route("api/chat")]
 public class ChatController(
     ChatSessionService chatService,
-    AzureAiService aiService,
+    FoundryAiService aiService,
     KanjiIndexService kanjiService) : ControllerBase
 {
     private string KeyId => HttpContext.Items["ApiKeyId"]?.ToString()
@@ -74,7 +74,8 @@ public class ChatController(
 
         await foreach (var token in aiService.StreamAsync(
             [.. session.Messages, userMessage],
-            complete => fullResponse = complete).WithCancellation(cancellationToken))
+            complete => fullResponse = complete,
+            cancellationToken))
         {
             var payload = JsonSerializer.Serialize(new { token });
             await Response.WriteAsync($"data: {payload}\n\n", cancellationToken);

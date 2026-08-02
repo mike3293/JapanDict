@@ -58,7 +58,7 @@ JapanDict is built around a simple workflow:
 │  ┌──────────────────┐                   │                   │
 │  │  Kanji Controller│    ┌──────────────▼───────────────┐  │
 │  │  - /kanji        │    │  Azure AI Service (OpenAI)   │  │
-│  │  - /kanji/search │    │  GPT-4o · streaming SSE      │  │
+│  │  - /kanji/search │    │  gpt-5.4-mini streaming      │  │
 │  └──────────────────┘    └──────────────────────────────┘  │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
@@ -90,7 +90,7 @@ JapanDict is built around a simple workflow:
 - **Session History** — previous chat sessions are listed chronologically so you can resume or review any past conversation.
 
 ### Backend
-- **AI Integration** — proxies requests to Azure OpenAI with a structured system prompt tailored for kanji/vocabulary analysis.
+- **AI Integration** — proxies requests to Microsoft Foundry Responses API with a structured system prompt tailored for kanji/vocabulary analysis.
 - **Access Key Auth** — every request must include a valid API key (`X-Api-Key` header). Valid keys are configured via the `AccessKeys` environment variable.
 - **Per-Key History** — all chat messages and dictionary entries are scoped to an access key, keeping data isolated per user/device.
 - **REST API** — clean versioned REST endpoints consumed by the mobile app.
@@ -120,7 +120,7 @@ JapanDict/
 
 ## Backend (.NET)
 
-**Stack:** ASP.NET Core 10 · MongoDB Driver (Cosmos DB Mongo API) · Azure.AI.OpenAI SDK
+**Stack:** ASP.NET Core 10 · MongoDB Driver (Cosmos DB Mongo API) · Microsoft Foundry Responses API
 
 ### Key Endpoints
 
@@ -187,7 +187,7 @@ There is no self-registration endpoint.
 
 The primary screen is a full AI agent chat interface:
 
-- **Multi-turn conversations** — each session maintains a message thread sent to the backend, which forwards the full history to Azure OpenAI so the model has context across turns.
+- **Multi-turn conversations** — each session maintains a message thread sent to the backend, which forwards the full history to Microsoft Foundry so the model has context across turns.
 - **Streaming** — responses are streamed token-by-token over SSE/chunked HTTP so the user sees text appearing in real time, identical to ChatGPT.
 - **Input modes** — free-type, paste, or receive via share intent. A toolbar button lets the user start a new session while keeping the old one in history.
 - **Session persistence** — sessions are stored in Cosmos DB and loaded on demand from the Session History screen.
@@ -226,7 +226,7 @@ The access key is stored in the device's secure storage (`expo-secure-store` or 
 | Azure Cosmos DB Account | Mongo API, Free Tier enabled |
 | Cosmos DB Database | `japandict-db` |
 | Cosmos DB Collections | `chat_sessions`, `kanji_index` |
-| Azure OpenAI Service | `S0` tier, GPT-4o deployment |
+| Microsoft Foundry AI Services | `S0` tier, `gpt-5.4-mini` deployment |
 | App Service Plan | Linux, `F1` Free (or `B1` Basic) |
 | App Service | Backend Docker container |
 
@@ -321,10 +321,10 @@ npx expo start
     "ConnectionString": "<cosmos-mongo-connection-string>",
     "DatabaseName": "japandict-db"
   },
-  "AzureOpenAI": {
-    "Endpoint": "https://<resource>.openai.azure.com/",
+  "FoundryAI": {
+    "Endpoint": "https://<resource>.services.ai.azure.com/openai/v1/responses",
     "ApiKey": "<key>",
-    "DeploymentName": "gpt-4o"
+    "Model": "gpt-5.4-mini"
   },
   "AccessKeys": "[\"key1\", \"key2\"]"
 }
@@ -336,7 +336,7 @@ npx expo start
 
 - [x] Project design & README
 - [x] .NET backend scaffold (API key auth, multi-turn chat sessions, streaming SSE, kanji extraction)
-- [x] Pulumi infrastructure (Cosmos DB, Azure OpenAI, App Service)
+- [x] Pulumi infrastructure (Cosmos DB, Microsoft Foundry AI Services, App Service)
 - [x] GitHub Actions CI/CD (backend Docker build + Pulumi deploy)
 - [x] React Native app — AI agent chat screen (multi-turn, streaming)
 - [x] React Native app — Kanji Encyclopedia tab

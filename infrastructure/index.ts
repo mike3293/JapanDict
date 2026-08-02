@@ -39,49 +39,51 @@ const cosmosConnStrings = pulumi
 
 const cosmosConnString = cosmosConnStrings.apply(cs => cs.connectionStrings![0].connectionString);
 
-// ── Azure OpenAI ──────────────────────────────────────────────────────────
-// customSubDomainName must be globally unique and lowercase (max 24 chars).
-const openAiSubdomain = 'japandict-ai';
+// ── Microsoft Foundry / Azure AI Services ─────────────────────────────────
+// customSubDomainName must be globally unique and lowercase.
+const foundrySubdomain = 'japandict';
+const foundryModelName = 'gpt-5.4-mini';
 
-const openAiAccount = new azure.cognitiveservices.Account('japandict-openai', {
+const foundryAccount = new azure.cognitiveservices.Account('japandict-foundry', {
     resourceGroupName: resourceGroup.name,
     location: resourceGroup.location,
-    kind: 'OpenAI',
+    kind: 'AIServices',
     sku: { name: 'S0' },
     properties: {
-        customSubDomainName: openAiSubdomain,
+        customSubDomainName: foundrySubdomain,
         publicNetworkAccess: 'Enabled',
     },
 });
 
-// GPT-4o deployment
-const gpt4oDeployment = new azure.cognitiveservices.Deployment('gpt-4o-deployment', {
+// GPT-5.4 mini deployment
+const miniDeployment = new azure.cognitiveservices.Deployment('gpt-5-4-mini-deployment', {
     resourceGroupName: resourceGroup.name,
-    accountName: openAiAccount.name,
-    deploymentName: 'gpt-4o',
+    accountName: foundryAccount.name,
+    deploymentName: foundryModelName,
     properties: {
         model: {
             format: 'OpenAI',
-            name: 'gpt-4o',
+            name: foundryModelName,
+            version: '2026-03-17',
         },
     },
     sku: {
         name: 'GlobalStandard',
         capacity: 10,
     },
-}, { dependsOn: [openAiAccount] });
+}, { dependsOn: [foundryAccount] });
 
-// Retrieve the OpenAI API key at deploy time
-const openAiKeys = pulumi
-    .all([resourceGroup.name, openAiAccount.name, gpt4oDeployment.id])
+// Retrieve the Foundry API key at deploy time
+const foundryKeys = pulumi
+    .all([resourceGroup.name, foundryAccount.name, miniDeployment.id])
     .apply(([rg, acc]) =>
         azure.cognitiveservices.listAccountKeys({
             resourceGroupName: rg,
             accountName: acc,
         }));
 
-const openAiKey = openAiKeys.apply(k => k.key1!);
-const openAiEndpoint = pulumi.interpolate`https://${openAiSubdomain}.openai.azure.com/`;
+const foundryKey = foundryKeys.apply(k => k.key1!);
+const foundryEndpoint = pulumi.interpolate`https://${foundrySubdomain}.services.ai.azure.com/openai/v1/responses`;
 
 // ── App Service Plan (Linux free tier) ────────────────────────────────────
 const appServicePlan = new azure.web.AppServicePlan('japandict-plan', {
@@ -122,23 +124,24 @@ const apiApp = new azure.web.WebApp('japandict-api', {
                 value: process.env.ACCESS_KEYS!,
             },
             {
-                name: 'AzureOpenAI__Endpoint',
-                value: openAiEndpoint,
+                name: 'FoundryAI__Endpoint',
+                value: foundryEndpoint,
             },
             {
-                name: 'AzureOpenAI__ApiKey',
-                value: openAiKey,
+                name: 'FoundryAI__ApiKey',
+                value: foundryKey,
             },
             {
-                name: 'AzureOpenAI__DeploymentName',
-                value: 'gpt-4o',
+                name: 'FoundryAI__Model',
+                value: foundryModelName,
             },
         ],
     },
     httpsOnly: true,
-}, { dependsOn: [appServicePlan, cosmosDb, gpt4oDeployment] });
+}, { dependsOn: [appServicePlan, cosmosDb, miniDeployment] });
 
 // ── Outputs ───────────────────────────────────────────────────────────────
 export const apiUrl = pulumi.interpolate`https://${apiApp.defaultHostName}`;
 export const cosmosAccountName = cosmosAccount.name;
-export const openAiAccountName = openAiAccount.name;
+export const foundryAccountName = foundryAccount.name;
+export const foundryResponsesEndpoint = foundryEndpoint;
