@@ -32,6 +32,70 @@ export interface KanjiEntry {
   lastSeenAt: string;
 }
 
+function getObjectErrorMessage(value: Record<string, unknown>): string | null {
+  for (const key of ['message', 'error', 'detail', 'details', 'title']) {
+    const message = getErrorMessage(value[key]);
+    if (message) return message;
+  }
+
+  const serialized = JSON.stringify(value);
+  return serialized === '{}' ? null : serialized;
+}
+
+function getErrorMessage(value: unknown): string | null {
+  if (!value) return null;
+  if (value instanceof Error) return value.message || value.name;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    try {
+      const parsed = JSON.parse(trimmed) as unknown;
+      return getErrorMessage(parsed) ?? trimmed;
+    } catch {
+      return trimmed;
+    }
+  }
+
+  if (Array.isArray(value)) {
+    const messages = value.map(getErrorMessage).filter(Boolean);
+    return messages.length ? messages.join(', ') : null;
+  }
+
+  if (typeof value === 'object') {
+    return getObjectErrorMessage(value as Record<string, unknown>);
+  }
+
+  return String(value);
+}
+
+function createApiError(status: number, body: unknown): Error {
+  const message = getErrorMessage(body);
+  return new Error(message ? `API error ${status}: ${message}` : `API error ${status}`);
+}
+
+function createStreamError(event: unknown): Error {
+  const eventObject =
+    event && typeof event === 'object' ? (event as Record<string, unknown>) : null;
+
+  if (eventObject?.type === 'timeout') {
+    return new Error('Connection timed out while waiting for the API response.');
+  }
+
+  const status = Number(eventObject?.xhrStatus);
+  const message =
+    getErrorMessage(eventObject?.message) ??
+    getErrorMessage(eventObject?.error) ??
+    getErrorMessage(event);
+
+  if (Number.isFinite(status) && status > 0) {
+    return new Error(message ? `API error ${status}: ${message}` : `API error ${status}`);
+  }
+
+  return new Error(message ?? 'Network error: Unable to reach the API server.');
+}
+
 export class ApiClient {
   private baseUrl: string;
   private apiKey: string;
@@ -56,7 +120,7 @@ export class ApiClient {
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      throw new Error(`API error ${response.status}: ${text}`);
+      throw createApiError(response.status, text);
     }
 
     return response.json() as Promise<T>;
@@ -117,8 +181,8 @@ export class ApiClient {
           }
         });
 
-        es.addEventListener('error', (e: any) => {
-          const err = new Error(String(e));
+        es.addEventListener('error', (e) => {
+          const err = createStreamError(e);
           onError(err);
           es.close();
           reject(err);
@@ -150,7 +214,7 @@ export class ApiClient {
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      onError(new Error(`API error ${response.status}: ${text}`));
+      onError(createApiError(response.status, text));
       return;
     }
 

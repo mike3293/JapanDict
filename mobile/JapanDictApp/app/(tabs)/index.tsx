@@ -226,7 +226,7 @@ export default function ChatScreen() {
       abortRef.current = abort;
       const isFirst = msgCountRef.current === 0;
 
-      apiClient.sendMessageStream(
+      void apiClient.sendMessageStream(
         sessionId,
         text,
         (token) => {
@@ -262,7 +262,9 @@ export default function ChatScreen() {
           isSendingRef.current = false;
         },
         abort.signal,
-      );
+      ).catch(() => {
+        // The error callback above already updates UI state.
+      });
     },
     [input, sessionId, apiClient, isStreaming],
   );
